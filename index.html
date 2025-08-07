@@ -1,185 +1,234 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>共享空间</title>
-    <style>
-        /* 保留你原来的样式 */
-        body { font-family: Arial; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .section { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
-        .photo-item img { width: 100%; height: 150px; object-fit: cover; border-radius: 5px; }
-        .todo-item { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
-        .todo-item.completed { text-decoration: line-through; opacity: 0.6; }
-        body {
-    margin: 0;
-    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    background: linear-gradient(135deg,#667eea 0%, #764ba2 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-.section {
-    background: rgba(255,255,255,.25);
-    backdrop-filter: blur(10px);
-    border-radius: 20px;
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: 0 8px 32px rgba(31,38,135,.37);
-    padding: 30px;
-    margin-bottom: 25px;
-}
-h2 { color:#fff; margin-top:0; }
-
-        /*按钮换色*/
-        button {
-    background: linear-gradient(45deg,#ff6b6b,#ff8e8e);
-    border: none;
-    color: #fff;
-    padding: 10px 22px;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: transform .2s;
-}
-button:hover { transform: scale(1.05); }
-
-        /*照片墙换色*/
-        .photo-gallery {
-    column-count: 3;
-    column-gap: 10px;
-}
-.photo-item {
-    break-inside: avoid;
-    margin-bottom: 10px;
-}
-@media (max-width:768px){ .photo-gallery{ column-count:2; } }
-
-        /*文本框*/
-        input[type=text], textarea {
-    width: 100%;
-    border: none;
-    border-radius: 10px;
-    padding: 10px 15px;
-    outline: none;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.1);
-    font-family: inherit;
-    resize: vertical;
-}
-    </style>
+  <meta charset="UTF-8">
+  <title>本地共享空间</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    /* 全局样式 */
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(135deg,#667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 768px) {
+      .container { grid-template-columns: 1fr; }
+    }
+    .section {
+      background: rgba(255,255,255,.25);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 8px 32px rgba(31,38,135,.37);
+      padding: 25px;
+      color: #fff;
+    }
+    .section h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    button {
+      background: linear-gradient(45deg,#ff6b6b,#ff8e8e);
+      border: none;
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 50px;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform .2s;
+    }
+    button:hover { transform: scale(1.05); }
+    textarea, input[type=text] {
+      width: 100%;
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      resize: vertical;
+      outline: none;
+    }
+    /* 照片墙瀑布流 */
+    .photo-gallery {
+      column-count: 3;
+      column-gap: 10px;
+    }
+    .photo-item {
+      break-inside: avoid;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .photo-item img {
+      width: 100%;
+      border-radius: 10px;
+    }
+    .photo-item button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      background: rgba(255,0,0,.7);
+      color: #fff;
+      font-size: 14px;
+    }
+    /* 待办样式 */
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .todo-item.completed {
+      text-decoration: line-through;
+      opacity: .6;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="section">
-            <h2>📸 共享照片墙</h2>
-            <input type="file" id="photoInput" accept="image/*" style="display:none" multiple>
-            <button onclick="photoInput.click()">上传照片</button>
-            <div id="photoGallery" style="display:grid; grid-template-columns: repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:15px;"></div>
-        </div>
-
-        <div class="section">
-            <h2>📝 共享日记</h2>
-            <textarea id="diaryContent" placeholder="写下今天的心情..." rows="4" style="width:100%"></textarea>
-            <button onclick="saveDiary()">发布日记</button>
-            <div id="diaryList" style="margin-top:15px;"></div>
-        </div>
-
-        <div class="section">
-            <h2>✅ 共享待办</h2>
-            <input type="text" id="todoInput" placeholder="添加待办事项..." style="width:70%; padding:5px">
-            <button onclick="addTodo()">添加</button>
-            <div id="todoList"></div>
-        </div>
+  <div class="container">
+    <!-- 照片墙 -->
+    <div class="section">
+      <h2>📸 本地照片墙</h2>
+      <input type="file" id="photoInput" accept="image/*" style="display:none" multiple>
+      <button onclick="photoInput.click()">上传照片</button>
+      <div class="photo-gallery" id="photoGallery"></div>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- 日记 -->
+    <div class="section">
+      <h2>📝 本地日记</h2>
+      <textarea id="diaryContent" placeholder="写下今天的心情..." rows="4"></textarea>
+      <button onclick="saveDiary()">发布日记</button>
+      <div id="diaryList"></div>
+    </div>
 
-    <script>
-        // 🔧 把这里改成你的数据库URL
-        const firebaseConfig = {
-            databaseURL: "https://YOUR-PROJECT-ID-default-rtdb.asia-southeast1.firebasedatabase.app/"
+    <!-- 待办 -->
+    <div class="section">
+      <h2>✅ 本地待办</h2>
+      <input type="text" id="todoInput" placeholder="添加待办事项..." />
+      <button onclick="addTodo()">添加</button>
+      <div id="todoList"></div>
+    </div>
+  </div>
+
+  <script>
+    // 本地存储键
+    const KEYS = {
+      PHOTOS: 'local_photos',
+      DIARIES: 'local_diaries',
+      TODOS: 'local_todos'
+    };
+
+    // 通用工具
+    const load = k => JSON.parse(localStorage.getItem(k) || '[]');
+    const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+    // 照片
+    const gallery = document.getElementById('photoGallery');
+    function displayPhoto(src) {
+      const div = document.createElement('div');
+      div.className = 'photo-item';
+      div.innerHTML = `
+        <img src="${src}">
+        <button onclick="deletePhoto('${src}')">×</button>
+      `;
+      gallery.appendChild(div);
+    }
+    function deletePhoto(src) {
+      if (confirm('删除这张照片？')) {
+        let photos = load(KEYS.PHOTOS);
+        photos = photos.filter(p => p !== src);
+        save(KEYS.PHOTOS, photos);
+        gallery.innerHTML = '';
+        photos.forEach(displayPhoto);
+      }
+    }
+    document.getElementById('photoInput').addEventListener('change', e => {
+      [...e.target.files].forEach(file => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const src = ev.target.result;
+          let photos = load(KEYS.PHOTOS);
+          photos.unshift(src);
+          save(KEYS.PHOTOS, photos);
+          displayPhoto(src);
         };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        reader.readAsDataURL(file);
+      });
+    });
 
-        // 实时监听照片
-        db.ref("photos").on("value", snap => {
-            const gallery = document.getElementById("photoGallery");
-            gallery.innerHTML = "";
-            snap.forEach(child => {
-                const p = child.val();
-                gallery.innerHTML += `<div class="photo-item">
-                    <img src="${p.src}">
-                    <button onclick="deletePhoto('${child.key}')">×</button>
-                </div>`;
-            });
-        });
+    // 日记
+    const diaryList = document.getElementById('diaryList');
+    function displayDiary(d) {
+      const div = document.createElement('div');
+      div.style = 'border-left:3px solid #667eea;padding:8px;margin:5px 0;';
+      div.innerHTML = `<small>${d.date}</small><br>${d.content}`;
+      diaryList.insertBefore(div, diaryList.firstChild);
+    }
+    function saveDiary() {
+      const value = document.getElementById('diaryContent').value.trim();
+      if (!value) return alert('写点什么吧！');
+      const diaries = load(KEYS.DIARIES);
+      diaries.unshift({ content: value, date: new Date().toLocaleString('zh-CN') });
+      save(KEYS.DIARIES, diaries);
+      displayDiary(diaries[0]);
+      document.getElementById('diaryContent').value = '';
+    }
 
-        // 实时监听日记
-        db.ref("diaries").on("value", snap => {
-            const list = document.getElementById("diaryList");
-            list.innerHTML = "";
-            snap.forEach(child => {
-                const d = child.val();
-                list.innerHTML += `<div style="border-left:3px solid #667eea; padding:8px; margin:5px 0;">
-                    <small>${d.date}</small><br>${d.content}
-                </div>`;
-            });
-        });
+    // 待办
+    const todoList = document.getElementById('todoList');
+    function renderTodos() {
+      todoList.innerHTML = '';
+      load(KEYS.TODOS).forEach((t, idx) => {
+        const div = document.createElement('div');
+        div.className = `todo-item ${t.done ? 'completed' : ''}`;
+        div.innerHTML = `
+          <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTodo(${idx})">
+          <span style="flex:1">${t.text}</span>
+          <button onclick="deleteTodo(${idx})">×</button>
+        `;
+        todoList.appendChild(div);
+      });
+    }
+    function addTodo() {
+      const value = document.getElementById('todoInput').value.trim();
+      if (!value) return alert('输入内容！');
+      const todos = load(KEYS.TODOS);
+      todos.unshift({ text: value, done: false });
+      save(KEYS.TODOS, todos);
+      renderTodos();
+      document.getElementById('todoInput').value = '';
+    }
+    function toggleTodo(i) {
+      const todos = load(KEYS.TODOS);
+      todos[i].done = !todos[i].done;
+      save(KEYS.TODOS, todos);
+      renderTodos();
+    }
+    function deleteTodo(i) {
+      const todos = load(KEYS.TODOS);
+      todos.splice(i, 1);
+      save(KEYS.TODOS, todos);
+      renderTodos();
+    }
 
-        // 实时监听待办
-        db.ref("todos").on("value", snap => {
-            const list = document.getElementById("todoList");
-            list.innerHTML = "";
-            snap.forEach(child => {
-                const t = child.val();
-                list.innerHTML += `<div class="todo-item ${t.completed?'completed':''}">
-                    <input type="checkbox" ${t.completed?'checked':''} onchange="toggleTodo('${child.key}', this.checked)">
-                    ${t.text}
-                    <button onclick="deleteTodo('${child.key}')">×</button>
-                </div>`;
-            });
-        });
-
-        // 上传照片
-        function handlePhoto(e) {
-            for (let file of e.target.files) {
-                const reader = new FileReader();
-                reader.onload = ev => {
-                    db.ref("photos").push({ src: ev.target.result });
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-        document.getElementById("photoInput").addEventListener("change", handlePhoto);
-        function deletePhoto(id) { db.ref("photos").child(id).remove(); }
-
-        // 发布日记
-        function saveDiary() {
-            const txt = document.getElementById("diaryContent").value.trim();
-            if (!txt) return alert("写点什么吧");
-            db.ref("diaries").push({ content: txt, date: new Date().toLocaleString("zh-CN") });
-            document.getElementById("diaryContent").value = "";
-        }
-
-        // 添加待办
-        function addTodo() {
-            const txt = document.getElementById("todoInput").value.trim();
-            if (!txt) return alert("输入内容");
-            db.ref("todos").push({ text: txt, completed: false });
-            document.getElementById("todoInput").value = "";
-        }
-        function toggleTodo(id, completed) {
-            db.ref("todos").child(id).update({ completed });
-        }
-        function deleteTodo(id) {
-            db.ref("todos").child(id).remove();
-        }
-    </script>
+    // 初始化
+    load(KEYS.PHOTOS).forEach(displayPhoto);
+    load(KEYS.DIARIES).forEach(displayDiary);
+    renderTodos();
+  </script>
 </body>
 </html>
 
